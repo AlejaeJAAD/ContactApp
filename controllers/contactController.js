@@ -5,21 +5,19 @@ export const getContacts = async (req, res) => {
     .then(([rows, fields]) => {
         res.send(rows)
       console.log(rows);
-      connection.end();
     })
     .catch(err => {
       console.log(err);
-      connection.end();
     });
 }
 
 export const createContact = async (req, res) => {
+    const createdBy = req.params.createdBy
     const { name, email, phone } = req.body;
     console.log(name, email, phone)
-    
     try {
-        await connection.query('INSERT INTO contacts SET ?', { name, email, phone });
-        res.status(201).send({ message: 'Contact created successfully.' });
+        const result = await connection.query('INSERT INTO contacts SET ?', { name, email, phone, createdBy });
+        res.status(201).send({ message: 'Contact created successfully.', contact: { name, email, phone, createdBy } });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error creating contact" });
@@ -117,7 +115,7 @@ export const sortContactsByPhone = async (req, res) => {
     }
 }
 
-export const paginationForContacts = async (req, res) => {
+export const pagination = async (req, res) => {
     const pageNumber = req.params.pageNumber;
     const limit = req.params.limit;
     const offset = (pageNumber - 1) * limit;
@@ -128,5 +126,100 @@ export const paginationForContacts = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error fetching contacts" });
+    }
+}
+
+export const uploadContactPhoto = async (req, res) => {
+    const id = req.params.id;
+    const photo = req.file.path;
+
+    try {
+        const result = await connection.query('UPDATE contacts SET photo = ? WHERE id = ?', [photo, id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).send({ message: "Contact not found" });
+        }
+        res.status(200).send({ message: 'Contact photo uploaded successfully.' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error uploading contact photo" });
+    }
+}
+
+export const downloadContactPhoto = async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const [rows] = await connection.query('SELECT photo FROM contacts WHERE id = ?', [id]);
+        const { photo } = rows[0];
+        console.log(photo)
+        
+        if (!photo) {
+            return res.status(404).send({ message: "Contact not found" });
+        }
+        res.setHeader('Content-Disposition', 'attachment; filename=image.jpeg');
+        res.set('Content-Type', 'image/jpeg');
+        res.download(photo);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error getting contact photo" });
+    }
+}
+
+export const countContacts = async (req, res) => {
+    try {
+        const result = await connection.query('SELECT COUNT(*) as total FROM contacts');
+        res.status(200).send({ total: result[0][0].total });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error getting contacts count" });
+    }
+}
+
+export const checkEmail = async (req, res) => {
+    const email = req.params.email;
+    connection.query('SELECT COUNT(*) as total FROM contacts WHERE email = ?', [email], (error, result) => {
+        if (error) {
+            console.log(error);
+            return res.status(500).send({ message: "Internal server error" });
+        }
+        res.send({ alreadyInUse: result[0].total > 0 });
+    });
+}
+
+export const checkPhone = async (req, res) => {
+    try {
+        const phone = req.params.phone;
+        const result = await connection.query('SELECT COUNT(*) as total FROM contacts WHERE phone = ?', [phone]);
+        res.send({ alreadyInUse: result[0].total > 0 });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error checking phone number" });
+    }
+}
+
+export const getContactsByGroup = async (req, res) => {
+    try {
+        const group = req.params.group;
+        const results = await connection.query('SELECT * FROM contacts WHERE group = ?', [group]);
+        res.send(results);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error fetching contacts by group" });
+    }
+}
+
+export const addGroupToContact = async (req, res) => {
+    const id = req.params.id;
+    const group = req.params.group;
+
+    try {
+        const result = await connection.query('UPDATE contacts SET group = ? WHERE id = ?', [group, id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).send({ message: "Contact not found" });
+        }
+        res.status(200).send({ message: 'Contact group updated successfully.' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error updating contact group" });
     }
 }

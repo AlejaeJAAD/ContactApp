@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Contact's Photo</title>
+</head>
+<body>
+    <h1>Download Contact's Photo</h1>
+
+  <form>
+    <label for="id">Contact ID:</label>
+    <input type="text" id="id" name="id" placeholder="Enter contact ID">
+    <button type="button" onclick="downloadPhoto()">Download</button>
+  </form>
+
+  <script>
+    function downloadPhoto() {
+      const id = document.querySelector("#id").value;
+      const link = document.createElement("a");
+      link.href = `http://localhost:3001/contacts/${id}/download-photo`;
+      link.download = "Contact's photo";
+      link.click();
+    }
+  </script>
+</body>
+</html>

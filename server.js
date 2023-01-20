@@ -9,6 +9,7 @@ executeScript('./db_script/script.sql')
 // Routes
 import authRoutes from './routes/authRoutes.js'
 import contactsRoutes from './routes/contactsRoutes.js'
+import usersRoutes from './routes/usersRoutes.js'
 
 const whiteList = [process.env.ORIGIN1, process.env.ORIGIN2]
 
@@ -44,6 +45,7 @@ app.use(express.urlencoded({
 
 app.use("/auth", authRoutes)
 app.use("/contacts", contactsRoutes)
+app.use("/users", usersRoutes)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

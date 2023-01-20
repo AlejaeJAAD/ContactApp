@@ -5,11 +5,20 @@ export async function executeScript(filePath) {
   console.log(filePath)
   try {
     // Read the SQL script file
-    const sqlScript = await fs.promises.readFile(filePath, 'utf8');
-    // Execute the SQL script
-    await connection.execute(sqlScript);
+    const sqlScript = fs.readFileSync(filePath).toString();
+    const queries = sqlScript.split(';')
+
+    for (const query of queries) {
+      if (query.trim() !== '') {
+          await connection.execute(query);
+      }
+    }
     console.log(`SQL Script ${filePath} executed successfully`);
   } catch (error) {
-    console.log(`Error executing the script: ${error.stack}`);
-  }
+    console.log(`Error executing the script: ${error}`);
+  } 
+  // finally {
+  //   // Close the connection
+  //   if (connection) connection.end();
+  // }
 }

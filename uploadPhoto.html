@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form>
+        <input type="file" id="photo" name="photo">
+        <input type="button" value="Upload" onclick="upload()">
+    </form>
+      
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        const upload = () => {
+        const file = document.getElementById('photo').files[0];
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        axios.post('http://localhost:3001/contacts/1/photo', formData, {
+            headers: {
+            'Content-Type': 'multipart/form-data'
+            }
+        })
+        .then(response => {
+            console.log(response.data);
+        })
+        .catch(error => {
+            console.log(error);
+        });
+        }
+    </script>
+</body>
+</html>
