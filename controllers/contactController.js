@@ -14,7 +14,6 @@ export const getContacts = async (req, res) => {
 export const createContact = async (req, res) => {
     const createdBy = req.params.createdBy
     const { name, email, phone } = req.body;
-    console.log(name, email, phone)
     try {
         const result = await connection.query('INSERT INTO contacts SET ?', { name, email, phone, createdBy });
         res.status(201).send({ message: 'Contact created successfully.', contact: { name, email, phone, createdBy } });
@@ -78,7 +77,7 @@ export const getContactByName = async (req, res) => {
     const name = req.params.name;
     try {
         const results = await connection.query('SELECT * FROM contacts WHERE name LIKE ?', [`%${name}%`]);
-        res.status(200).send(results);
+        res.status(200).send(results[0]);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error searching contacts" });
@@ -88,7 +87,7 @@ export const getContactByName = async (req, res) => {
 export const sortContactsByName = async (req, res) => {
     try {
         const results = await connection.query('SELECT * FROM contacts ORDER BY name');
-        res.status(200).send(results);
+        res.status(200).send(results[0]);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error sorting contacts by name" });
@@ -98,7 +97,7 @@ export const sortContactsByName = async (req, res) => {
 export const sortContactsByEmail = async (req, res) => {
     try {
         const results = await connection.query('SELECT * FROM contacts ORDER BY email');
-        res.status(200).send(results);
+        res.status(200).send(results[0]);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error sorting contacts by email" });
@@ -108,7 +107,7 @@ export const sortContactsByEmail = async (req, res) => {
 export const sortContactsByPhone = async (req, res) => {
     try {
         const results = await connection.query('SELECT * FROM contacts ORDER BY phone');
-        res.status(200).send(results);
+        res.status(200).send(results[0]);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error sorting contacts by phone" });
@@ -116,13 +115,13 @@ export const sortContactsByPhone = async (req, res) => {
 }
 
 export const pagination = async (req, res) => {
-    const pageNumber = req.params.pageNumber;
-    const limit = req.params.limit;
+    const pageNumber = parseInt(req.params.pageNumber);
+    const limit = parseInt(req.params.limit);
     const offset = (pageNumber - 1) * limit;
 
     try {
         const results = await connection.query('SELECT * FROM contacts LIMIT ? OFFSET ?', [limit, offset]);
-        res.status(200).send(results);
+        res.status(200).send(results[0]);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error fetching contacts" });
@@ -176,24 +175,42 @@ export const countContacts = async (req, res) => {
 }
 
 export const checkEmail = async (req, res) => {
-    const email = req.params.email;
-    connection.query('SELECT COUNT(*) as total FROM contacts WHERE email = ?', [email], (error, result) => {
-        if (error) {
-            console.log(error);
-            return res.status(500).send({ message: "Internal server error" });
-        }
-        res.send({ alreadyInUse: result[0].total > 0 });
-    });
+    try {
+        const email = req.params.email;
+        const [results] = await connection.query('SELECT COUNT(*) as total FROM contacts WHERE email = ?', [email]);
+        const alreadyInUse = results[0].total > 0 ? true : false;
+        // const alreadyInUse = !!results[0].total;
+
+        res.send({ alreadyInUse });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error checking email" });
+    }
 }
 
 export const checkPhone = async (req, res) => {
     try {
         const phone = req.params.phone;
         const result = await connection.query('SELECT COUNT(*) as total FROM contacts WHERE phone = ?', [phone]);
-        res.send({ alreadyInUse: result[0].total > 0 });
+        res.send({ alreadyInUse: result[0].total > 0 ? true : false });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Error checking phone number" });
+    }
+}
+
+export const createGroup = async (req, res) => {
+    const { name, description } = req.body
+    
+    try {
+        const [result] = await connection.query(
+            "INSERT INTO groups SET name = ?, description = ?, user_id = ?",
+            [name, description]
+        );
+        res.status(201).send({ message: "Group created successfully", group: { name, description } });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Error creating group" });
     }
 }
 

@@ -11,19 +11,20 @@ import {
     sortContactsByPhone,
     uploadContactPhoto,
     downloadContactPhoto,
-    pagination,
     countContacts,
     checkEmail,
     checkPhone,
+    createGroup,
     getContactsByGroup,
-    addGroupToContact
+    addGroupToContact,
+    pagination,
 } from '../controllers/contactController.js'
 import { upload } from '../multerConfig.js';
 
 const router = Router()
 
 router.get("/getContacts", getContacts)
-router.post("/createContact", createContact)
+router.post("/createContact/:createdBy", createContact)
 router.get("/getContactById/:id", getContactById)
 router.put("/updateContact/:id", updateContact)
 router.delete("/deleteContact/:id", deleteContact)
@@ -33,11 +34,14 @@ router.get("/sort/email", sortContactsByEmail)
 router.get("/sort/phone", sortContactsByPhone)
 router.post("/:id/photo", upload.single('photo'), uploadContactPhoto)
 router.get("/:id/download-photo", downloadContactPhoto)
-router.get("/:pageNumber/:limit", pagination)
 router.get("/count", countContacts)
 router.get("/check-email/:email", checkEmail)
 router.get("/check-phone/:phone", checkPhone)
-router.get("/group/:group", getContactsByGroup)
+
+router.post("/contacts/createGroup", createGroup)
 router.put("/contacts/:id/group/:group", addGroupToContact)
+router.get("/group/:group", getContactsByGroup)
+
+router.get("/:pageNumber/:limit", pagination)
 
 export default router
